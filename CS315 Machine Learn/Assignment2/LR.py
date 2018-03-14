@@ -41,7 +41,15 @@ class myLR():
         J = (-1/length) * sigErr
         return J
 
-    def DcostFunc(X, y, theta )
+    def DcostFunc(X, y, theta, it, length, alpha ):
+        sigErr = 0
+        for i in range(length):
+            hyp = hypoth(theta, X[i])
+            err = (hyp - y[i])*X[i][it]
+            sigErr += err
+        c = float(alpha)/float(length)
+        J = c * sigErr
+        return J
 
     def hypoth(self, theta, X):
         z = 0
