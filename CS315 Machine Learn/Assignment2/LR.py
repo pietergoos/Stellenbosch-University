@@ -20,9 +20,12 @@ class myLR():
 
     def predict(self, X):
         a = []
-        for i in range(1000):
-            a.append(self.sigmaFunc(self.weights, X[i]))
-        return a
+        for i in range(X.shape[0]):
+            a.append(round(self.sigmaFunc(self.weights, X[i])))
+        return np.array(a)
+
+    def isClose(self, wOld, wNew):
+        pass
 
     def sigmoid(self, a):
         return (1/(1+np.exp(-a)))
@@ -30,18 +33,15 @@ class myLR():
     def hessian(self, X, W):
         return X.T.dot(W).dot(X)
 
-#    '''
 #    This is designed to run the σ(w^T x_n)
 #    w -     Weighting
 #    x -     datapoint
-#    '''
     def sigmaFunc(self, w, x):
         z = 0
         for i in range(len(w)):
             z += x[i] * w[i]
         return self.sigmoid(z)
 
-#    '''
 #    This is the Loss function
 #    X -         dataset
 #    y -         labels
@@ -49,7 +49,6 @@ class myLR():
 #    iter -      iteration coefficient (used for derivative)
 #    learnRate - learning rate of the function (1/c) multiplied in later
 #    dt -        use the derivative or not - default not
-#    '''
     def E(self, X, y, w, it, learnRate, dt = False):
         sumLoss = 0
         for i in range(len(y)):
@@ -66,13 +65,11 @@ class myLR():
             sumLoss += loss
         return (1/learnRate) * sumLoss
 
-#    '''
 #    Gradient Descent Function - used to obtain a more correct weight
 #    X -         dataset
 #    y -         labels
 #    w -         weights from before
 #    learnRate - Learning rate variable - (1/c) multiplied later
-#    '''
     def gradDes(self, X, y, w, learnRate):
         wNew = []
         for i in range(len(w)):
