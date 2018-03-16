@@ -4,17 +4,16 @@ import scipy as sp
 ##############################################################
 ## THIS CLASS CALCULATES THE LOGISTIC REGRESSION PREDICTION ##
 ##############################################################
+## This file is largely based on LR_b.py in the same folder ##
+##############################################################
 
 class myLR():
     def __init__(self):
         pass
 
     def fit(self, X, y, learnRate, threshold = 0.0001):
-        #run the error function - compare to threshold
-        #w = np.random.rand(X.shape[:,0])
         w = [0, 0]
         finished = False
-        #for i in range(1000):
         while not finished:
             wN = self.gradDes(X, y, w, learnRate)
             finished = self.isClose(w, wN, threshold)
