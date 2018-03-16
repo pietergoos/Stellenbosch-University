@@ -9,12 +9,15 @@ class myLR():
     def __init__(self):
         pass
 
-    def fit(self, X, y, learnRate):
+    def fit(self, X, y, learnRate, threshold = 0.0001):
         #run the error function - compare to threshold
         #w = np.random.rand(X.shape[:,0])
         w = [0, 0]
-        for i in range(1000):
+        finished = False
+        #for i in range(1000):
+        while not finished:
             wN = self.gradDes(X, y, w, learnRate)
+            finished = self.isClose(w, wN, threshold)
             w = wN
         self.weights = w
 
@@ -24,8 +27,8 @@ class myLR():
             a.append(round(self.sigmaFunc(self.weights, X[i])))
         return np.array(a)
 
-    def isClose(self, wOld, wNew):
-        pass
+    def isClose(self, wOld, wNew, threshold):
+        return np.any(np.abs(np.array(wOld) - np.array(wNew))) < threshold
 
     def sigmoid(self, a):
         return (1/(1+np.exp(-a)))
