@@ -32,8 +32,14 @@ class myLR():
     def sigmoid(self, a):
         return (1/(1+np.exp(-a)))
 
-    def hessian(self, X, W):
-        return X.T.dot(W).dot(X)
+    def hessian(self, X, W, Regul=2):
+        X = X.T
+        hess = 0
+        for i in range(len(X)):
+            s = self.sigmoid(np.dot(X[i], np.array(W)))
+            hess += (s * (1-s) ) * np.dot(X[i], X[i].T)
+        hess += (1/Regul) * np.identity(len(X[0]))
+        return hess
 
 #    This is designed to run the σ(w^T x_n)
 #    w -     Weighting
