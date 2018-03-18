@@ -7,6 +7,7 @@ function checkAll() {
       score++;
     }
     else{
+
       alert("Question 1 is incorrect: During this time Whiskey could be obtained through a prescription from your doctor and picked up at a pharmacy.");
     }
 
@@ -80,13 +81,13 @@ function checkAll() {
       q5ans = true;
     }
     if (q5ans == true) {
-      alert("Part of Question 5 is incorrect.")
+      alert("Part of Question 5 is incorrect.");
     }
     else{
       score++;
     }
 
-    alert("Your score was " + score + " out of 5")
+    alert("Your score was " + score + " out of 5");
     return false;
 }
 
