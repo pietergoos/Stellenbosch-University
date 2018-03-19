@@ -11,19 +11,22 @@ class myLR():
     def __init__(self):
         pass
 
-    def fit(self, X, y, learnRate, threshold = 0.0001):
-        w = [0, 0]
+    def fit(self, X, y, learnRate, threshold = 0.00001):
+        Xne = np.insert(X, 0, 1, axis=1)
+        w = [0, 0, 0]
+        #w = np.array(np.zeros([1,3]))
         finished = False
         while not finished:
-            wN = self.gradDes(X, y, w, learnRate)
+            wN = self.gradDes(Xne, y, w, learnRate)
             finished = self.isClose(w, wN, threshold)
             w = wN
         self.weights = w
 
     def predict(self, X):
+        Xne = np.insert(X, 0, 1, axis=1)
         a = []
-        for i in range(X.shape[0]):
-            a.append(round(self.sigmaFunc(self.weights, X[i])))
+        for i in range(Xne.shape[0]):
+            a.append(np.round(self.sigmaFunc(self.weights, Xne[i])))
         return np.array(a)
 
     def isClose(self, wOld, wNew, threshold):
@@ -33,11 +36,11 @@ class myLR():
         return (1/(1+np.exp(-a)))
 
     def hessian(self, X, W, Regul=2):
-        X = X.T
+        X = np.insert(X, 0, 1, axis=1)
         hess = 0
         for i in range(len(X)):
-            s = self.sigmoid(np.dot(X[i], np.array(W)))
-            hess += (s * (1-s) ) * np.dot(X[i], X[i].T)
+            s = self.sigmoid(np.dot(X[i], W))
+            hess += (s * (1-s)) * X[i, :].reshape((3,1)) * X[i, :].reshape((3,1)).T
         hess += (1/Regul) * np.identity(len(X[0]))
         return hess
 
@@ -46,8 +49,11 @@ class myLR():
 #    x -     datapoint
     def sigmaFunc(self, w, x):
         z = 0
-        for i in range(len(w)):
-            z += x[i] * w[i]
+
+        z = np.array(w).dot(x)
+        #for i in range(len(w)):
+        #    z += x[i] * w[i]
+
         return self.sigmoid(z)
 
 #    This is the Loss function
@@ -83,4 +89,5 @@ class myLR():
         for i in range(len(w)):
             CFD = self.E(X, y, w, i, learnRate, True)
             wNew.append(w[i] - CFD)
+            #print(wNew)
         return wNew
