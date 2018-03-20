@@ -5,14 +5,11 @@ import scipy as sp
 ## THIS CLASS CALCULATES K-MEANS CLUSTERING ##
 ##############################################
 
-#TODO Implement whitening / normalizing
-#TODO Implement binary split as an option
-
 class myKM():
     def __init__(self):
         pass
 
-    def train(self, X, nClasses, norm = False, bSplit = False, dim = 2):
+    def train(self, X, nClasses, dim = 2):
         classes = []
         finished = False
 
