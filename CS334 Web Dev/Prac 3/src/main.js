@@ -291,3 +291,6 @@ function subm() {
     }
   }
 }
+
+//TODO: Fix score system
+//TODO: Make the webpage responsive
