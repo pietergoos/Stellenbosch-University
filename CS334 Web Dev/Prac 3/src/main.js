@@ -33,6 +33,7 @@ $(document).ready(function() {
   }
   fillQ();
   fillA();
+  updtLead();
 
 });
 
@@ -300,5 +301,3 @@ function subm() {
     }
   }
 }
-
-//TODO: Make the webpage responsive
