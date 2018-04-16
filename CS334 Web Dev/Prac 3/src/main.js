@@ -1,6 +1,7 @@
 $(document).ready(function() {
   function fillQ() {
     $.ajax({
+      async: false,
       type: "post",
       url: "process.php",
       data: "action=fillQuestions",
@@ -14,6 +15,7 @@ $(document).ready(function() {
 
   function fillA() {
     $.ajax({
+      async: false,
       type: "post",
       url: "process.php",
       data: "action=fillAnswers",
@@ -36,6 +38,7 @@ $(document).ready(function() {
 
 function submitScore(sc, us, pw) {
   $.ajax({
+    async: false,
     type: "post",
     url: "process.php",
     data: "action=submitScore&user=" + us + "&pass=" + pw + "&score=" + sc,
@@ -59,6 +62,7 @@ function reg(inp, pw) {
 
 function updtLead() {
   $.ajax({
+    async: false,
     type: "post",
     url: "process.php",
     data: "action=getScore",
@@ -78,9 +82,8 @@ function updtLead() {
   });
 }
 
-var score = 0;
-
 function processQ(d) {
+  var score = 0;
   var comp = [1, 4, 2, 5, 6];
   var x;
   var ctr = 0;
@@ -115,12 +118,14 @@ function processQ(d) {
           $("#q" + k + (j + 1)).html("The Correct answer is Whiskey");
         } else {
           $("#q" + k + (j + 1)).html("Correct!");
+          score++;
         }
       } else {
         if (d[ctr].split("(")[o] != x) {
-          $("#a" + k + (j + 1)).html("<i>hi" + d[ctr].split("(")[o] + "</i>");
+          $("#a" + k + (j + 1)).html("<i>" + d[ctr].split("(")[o] + "</i>");
         } else {
           $("#a" + k + (j + 1)).html("<i>Correct!</i>");
+          score++;
         }
       }
       ctr++;
@@ -210,18 +215,23 @@ function processQ(d) {
 
   alert("Your score was " + score + " out of 5");
   */
+  return score;
 }
 
 function checkAll() {
+  var oppp = 0;
   $.ajax({
+    async: false,
     type: "post",
     url: "process.php",
     data: "action=corrAns",
     success: function(data) {
-      var d = data.split("*");
-      processQ(d);
+      oppp = processQ(data.split("*"));
+      console.log(oppp);
     }
   });
+
+  return oppp;
 }
 
 function nomText(string) {
@@ -279,8 +289,7 @@ function subm() {
   if (checkFields()) {
     if (reg(document.getElementById("usn").value, 0)) {
       if (reg(document.getElementById("pwd").value, 0)) {
-        checkAll();
-        var scr = score;
+        var scr = checkAll();
         submitScore(scr, document.getElementById("usn").value, document.getElementById("pwd").value);
         updtLead();
       } else {
@@ -292,5 +301,4 @@ function subm() {
   }
 }
 
-//TODO: Fix score system
 //TODO: Make the webpage responsive
