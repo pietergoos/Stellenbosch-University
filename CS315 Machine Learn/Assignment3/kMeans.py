@@ -6,7 +6,7 @@ import scipy as sp
 ##   Many thanks to gorrox23 @ GITLAB.com   ##
 ##############################################
 
-class myKM():
+class myKM():    
     def __init__(self):
         pass
 
