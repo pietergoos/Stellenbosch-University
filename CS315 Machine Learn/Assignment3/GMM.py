@@ -14,13 +14,9 @@ class myGMM():
 
         notConverged = True
         while(notConverged):
-            print("run")
-            print(np.array(pi).shape)
-            print(np.array(mu).shape)
-            print(np.array(Sig).shape)
             #E
             gamma = self.getGamma(X, pi, mu, Sig, k)
-            self.relabel(X, k, gamma)
+            yLocal, maxgamma = self.relabel(X, k, gamma)
 
             #M
             pi, mu, Sig = self.maximisation(X, self.y, gamma)
@@ -28,8 +24,7 @@ class myGMM():
             #Comparison
             notConverged = not(np.array_equal(self.yold, self.y))
 
-        return self.y, np.array(mu)
-
+        return self.y, np.array(mu), gamma, maxgamma, Sig
 
     def getKMVars(self, X, k):
         y, u = KM().classify(X, k)
@@ -55,15 +50,19 @@ class myGMM():
 
     def relabel(self, X, k, gamma):
         self.yold = self.y
+        maxgamma = []
         yn = []
         for i in range(X.shape[0]):
             ptgamma = []
             for j in range(k):
                 ptgamma.append(gamma[j][i])
             yn.append(np.argmax(ptgamma))
+            maxgamma.append(ptgamma[np.argmax(ptgamma)])
         self.y = np.array(yn)
+        return np.array(yn), np.array(maxgamma)
 
     def maximisation(self, X, y, gamma):
+        #TODO Fix this area to use formulae instead of functions
         '''
         mean = []
         cov = []
