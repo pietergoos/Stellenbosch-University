@@ -33,7 +33,7 @@ class myGMM():
         num, cn = np.unique(y, return_counts = True)
         for i in num:
             pi.append(cn[i] / y.shape[0])
-            cov.append(np.cov(X[y==i].T))
+            cov.append(np.cov(X[y==i].T, bias=True))
         pi = np.array(pi)
         cov = np.array(cov)
         self.y = y
@@ -62,8 +62,6 @@ class myGMM():
         return np.array(yn), np.array(maxgamma)
 
     def maximisation(self, X, y, gamma):
-        #TODO Fix this area to use formulae instead of functions
-        '''
         mean = []
         cov = []
         pi = []
@@ -72,23 +70,15 @@ class myGMM():
         for i in classes:
             Nj.append(np.sum(gamma[i]))
             pi.append(Nj[i] / y.shape[0])
-            mean.append(np.sum(gamma.T[i] * X[i])/Nj[i])
-            cov.append(np.sum(gamma.T[i] * (X[i] - mean[i])* (X[i] - mean[i]).T)/Nj[i])
+            s = 0
+            for n in range(X.shape[0]):
+                s += gamma[i].T[n] * X[n].T
+            mean.append(s/Nj[i])
+            s = 0
+            for n in range(X.shape[0]):
+                s += gamma[i].T[n] * (X[n].T - mean[i]) * (X[n].T - mean[i]).T
+            cov.append(s/Nj[i])
         pi = np.array(pi)
         cov = np.array(cov)
         mean = np.array(mean)
-        '''
-        pi = []
-        cov = []
-        mean = []
-        num, cn = np.unique(y, return_counts = True)
-        for i in num:
-            pi.append(cn[i] / y.shape[0])
-            cov.append(np.cov(X[y==i].T))
-            mean.append(np.mean(X[y==i], axis = 0))
-        pi = np.array(pi)
-        cov = np.array(cov)
-        mean = np.array(mean)
-
-
         return pi, mean, cov
