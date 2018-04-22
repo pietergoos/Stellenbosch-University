@@ -6,7 +6,7 @@ import scipy as sp
 ##   Many thanks to gorrox23 @ GITLAB.com   ##
 ##############################################
 
-class myKM():    
+class myKM():
     def __init__(self):
         pass
 
@@ -53,7 +53,7 @@ class myKM():
         self.eig = []
         lenn = []
         for i in range(len(classes)):
-            self.eig.append(np.linalg.eigvals(np.cov(self.Xo[i].T)))
+            self.eig.append(np.linalg.eigvals(np.cov(self.Xo[i].T, bias=True)))
             lenn.append(self.eig[i][0]**2 + self.eig[i][1]**2)
         self.eig = np.array(self.eig)
         lenn = np.array(lenn)
