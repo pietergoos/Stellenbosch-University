@@ -11,6 +11,7 @@ Initial version created on Mar 28, 2012
 @author: kroon, herbst
 '''
 
+from __future__ import division
 from warnings import warn
 import numpy as np
 from gaussian import Gaussian
@@ -169,12 +170,12 @@ class HMM(object):
         Fit a left-to-right HMM model to the training data provided in `data`.
         The training data consists of l different observaion sequences,
         each sequence of length n_obs_i specified in `lengths`.
-        The fitting uses Viterbi re-estimation (an EM algorithm).
+        The fitting uses Viterbi re-estimation (i.e. the EM algorithm).
 
         Parameters
         ----------
         data : (d,n_obs) ndarray
-            An array of the training data, consisting of several different
+            An arrray of the trainining data, consisting of several different
             sequences.
             Note: Each observation has d features, and there are a total of n_obs
             observation.
@@ -212,6 +213,7 @@ class HMM(object):
         '''
 
         self.trans, self.dists = trans, dists
+        n_states = self.trans.shape[0] -1
 
     def _n_states(self):
         '''
@@ -371,10 +373,6 @@ class HMM(object):
             seq[i] = backtable[seq[i+1], i+1]
         return seq, lltable[n_states, T]
 
-        #pass
-        # In this function, you may want to take log 0 and obtain -inf.
-        # To avoid warnings about this, you can use np.seterr.
-
     def score(self, signal, seq):
         '''
         See documentation for _score()
@@ -439,7 +437,6 @@ class HMM(object):
         loglik += transition_prob + state_prob
 
         return loglik
-        #pass
 
     def forward(self, signal):
         '''
@@ -477,36 +474,65 @@ class HMM(object):
         ll : float
             The log-likelihood associated with the observation under the model.
         '''
+        # A non-log version
+        # N = len(dists)
+        # T = signal.shape[1]
+        #
+        # # setup step
+        # current_a = np.array(trans[-1, :N])
+        # next_a = np.zeros(N)
+        #
+        # # first step
+        # for j in np.arange(N):
+        #     current_dist = dists[j].likelihood(signal[:, 0])
+        #     current_a[j] *= current_dist
+        #
+        # # loop through signal
+        # for t in np.arange(1, T):
+        #     for j in np.arange(N):
+        #         current_dist =  dists[j].likelihood(signal[:, t])
+        #         for i in np.arange(N):
+        #             transition_prob = trans[i][j]
+        #             next_a[j] += transition_prob * current_a[i]
+        #         next_a[j] *= current_dist
+        #     current_a = next_a
+        #     next_a = np.zeros(N)
+        #
+        # ans = 0
+        # for i in np.arange(N):
+        #     transition_prob = trans[i][N]
+        #     ans += transition_prob * current_a[i]
+        # return np.log(ans)
 
-        #Get constants
         N = len(dists)
         T = signal.shape[1]
 
-        #Setup
-        nowA = np.log(np.array(trans[-1:N]))
-        nextA = np.zeros(N)
+        # setup step
+        current_a = np.log(np.array(trans[-1, :N]))
+        next_a = np.zeros(N)
 
-        #Step 1
+        # first step
         for j in np.arange(N):
-            nowA[j] += dists[j].loglik(signal[:,0])
+            current_dist =  dists[j].loglik(signal[:, 0])
+            current_a[j] += current_dist
 
-        #Step through signal1
-        for t in np.arange(1,T):
+        # loop through signal
+        for t in np.arange(1, T):
             for j in np.arange(N):
-                nextA = -float('inf')
-                nowDist = dists[j].loglik(signal[:,t])
+                next_a[j] = -float('inf')
+                current_dist = dists[j].loglik(signal[:, t])
                 for i in np.arange(N):
-                    a = np.log(trans[i][j])
-                    nextA[j] = no.logaddexp(nextA[j], a + nowA[i])
-                nextA[j] += nowDist
-            nowA = nextA
-            nextA = np.zeros(N)
+                    transition_prob = np.log(trans[i][j])
+                    next_a[j] = np.logaddexp(next_a[j], transition_prob + current_a[i])
+                next_a[j] += current_dist
+            current_a = next_a
+            next_a = np.zeros(N)
 
-        totLogLike = -float('inf')
+        loglik = -float('inf')
         for i in np.arange(N):
-            a = np.log(trans[i][N])
-            totLogLike = no.logaddexp(totLogLike, a + nowA[i])
-        return totLogLike
+            transition_prob = np.log(trans[i][N])
+            loglik = np.logaddexp(loglik, transition_prob + current_a[i])
+        return loglik
 
     def _calcstates(self, trans, dists):
         '''
@@ -548,6 +574,7 @@ class HMM(object):
         ll : float
             Log-likelihood of all the data
         '''
+
         maxstates = trans.shape[0]-1 # Exclude initial and final states
         newtrans = np.zeros_like(trans)
         used = [False] * maxstates + [True]
@@ -572,10 +599,6 @@ class HMM(object):
         states = np.array(states[:, newstates[:-1]],dtype=bool) # Remove unused states by indexing
         return states, newtrans, totalll
 
-        #pass
-        # The core of this function involves applying the _viterbi function to each signal stored in the model.
-        # Remember to remove emitting states not used in the new state allocation.
-
     def _updatecovs(self, states):
         '''
         Update estimates of the means and covariance matrices for each HMM state
@@ -598,36 +621,30 @@ class HMM(object):
             The updated means for each state
         '''
 
-        nStates = states.shape[1]
+        n_states = states.shape[1]
         d = self.data.shape[0]
-        covs = np.zeros((nStates, d, d))
-        means = np.zeros((nStates, d))
-
-        for i in range(nStates):
-            idata = self.data[:, states[:,i]]
-
-            if idata.shape[1] > 0:
-                means[i] = np.mean(idata, axis=1)
+        covs = np.zeros((n_states, d, d))
+        means = np.zeros((n_states, d))
+        for i in range(n_states):
+            dati = self.data[:,states[:,i]]
+            if dati.shape[1] > 0:
+                means[i] = np.mean(dati,axis=1)
             else:
+                warn("Attempting to calculate mean from no observations, setting to zero")
                 means[i] = np.zeros(d)
-
-            if idata.shape[1] > 1:
-                covs[i] = np.array([np.cov(idata)], ndmin=2)
-                if np.count_nonzero(covs[i]) == 0:
-                    covs[i] = np.eye(idata.shape[0])
+            if dati.shape[1] > 1:
+                covs[i] = np.array([np.cov(dati)],ndmin=2)
+                if np.count_nonzero(covs[i]) == 0: # Degenerate covariance
+                    # Dirty hack - better would be a Bayesian or regularization
+                    # approach to smoothing the covariance matrix
+                    warn("Zero covariance matrix obtained, setting to identity")
+                    covs[i] = np.eye(dati.shape[0])
             else:
-                covs[i] = np.eye(idata.shape[0])
-
+                warn("Attempting to calculate covariance matrix from one observation, setting to identity")
+                covs[i] = np.eye(dati.shape[0])
         if self.diagcov:
             covs = np.array([np.diag(np.diag(c)) for c in covs])
         return covs, means
-
-
-        #pass
-        # In this method, if a class has no observations, assign it a mean of zero
-        # In this method, estimate a full covariance matrix and discard the non-diagonal elements
-        # if a diagonal covariance matrix is required.
-        # In this method, if a zero covariance matrix is obtained, assign an identity covariance matrix
 
     def _em(self, trans, states):
         '''
@@ -678,7 +695,12 @@ class HMM(object):
         converged = False
         iters = 0
         while not converged and iters <  self.maxiters:
-            pass # Perform one iteration of the EM algorithm and test for convergence here
+            covs, means = self._updatecovs(oldstates)
+            dists = [Gaussian(mean=means[i], cov=covs[i]) for i in range(len(covs))]
+            newstates, trans, newLL = self._calcstates(trans, dists)
+            if abs(newLL - oldLL) / abs(oldLL) < self.rtol:
+                converged = True
+            oldstates, oldLL = newstates, newLL
             iters += 1
         if iters >= self.maxiters:
             warn("Maximum number of iterations reached - HMM parameters may not have converged")
@@ -741,23 +763,28 @@ class HMM(object):
             return np.array(np.floor(fn(r)),dtype=int)[0]
         #######################################################################
 
+        #TODO: Using the function defined above, draw samples from the HMM
         from scipy.stats import multivariate_normal
         samples = np.array([0,0])
         states = np.array([])
         state = -1
         fin_state = self._n_states()
-        state = draw_discrete_sample(self.trans[state])
 
-        while not state == fin_state:
+        state = draw_discrete_sample(self.trans[state])
+        while state != fin_state:
             dist = self.dists[state]
-            samples = np.vstack([samples, multivariate_normal.rvs(mean = dist.get_mean(), cov = dist.get_cov())])
+            samples = np.vstack(
+                [samples,
+                multivariate_normal.rvs(
+                    mean=dist.get_mean(),
+                    cov=dist.get_cov()
+                    )]
+                )
             states = np.append(states, state)
             state = draw_discrete_sample(self.trans[state])
 
         samples = samples[1:]
         return [samples, states]
-        #pass # Using the function defined above, draw samples from the HMM
-
 
 if __name__ == "__main__":
     import doctest
